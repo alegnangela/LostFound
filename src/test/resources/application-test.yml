@@ -1,0 +1,10 @@
+# Stand-in Azure AD settings so the default (JWT) security configuration can start in tests. Nothing here
+# is ever contacted: the issuer is only resolved on the first real token validation, and tests either use
+# mock authentications or replace the JwtDecoder (see TestAzureAdTokens). Must match TestAzureAdTokens.
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://login.microsoftonline.com/00000000-0000-0000-0000-000000000000/v2.0
+          audiences: api://lost-found-test

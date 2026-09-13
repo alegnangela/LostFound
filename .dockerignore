@@ -1,0 +1,3 @@
+# Allowlist: the image only needs the jar built by mvn package, so nothing else enters the build context
+*
+!target/lost-found-service-*.jar

@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: lost-found-service
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:lostfound}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME:lostfound}
+    password: ${DB_PASSWORD:lostfound}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate # schema is owned by Flyway (db/migration); Hibernate only checks it matches the entities
+    open-in-view: false # avoid lazy-loading and held connections during view rendering
+    properties:
+      hibernate:
+        format_sql: true
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  pattern:
+    correlation: "[%X{requestId:-}] " # set per request by RequestLoggingFilter
+  level:
+    com.crescendo.lostfound: INFO
+
+---
+# Default (production): accept only Microsoft Entra ID (Azure AD) access tokens issued for this API.
+# No defaults on purpose - the app fails to start if the tenant or audience is missing. The issuer's
+# signing keys are fetched on the first token validation, so startup doesn't depend on Azure being reachable.
+spring:
+  config:
+    activate:
+      on-profile: "!local"
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID}/v2.0
+          audiences: ${AZURE_API_AUDIENCE}
+
+---
+# Local development: HTTP Basic with in-memory users instead of Azure AD (see SecurityConfig).
+spring:
+  config:
+    activate:
+      on-profile: local
+
+app:
+  security:
+    # Defaults are for local development only - override with ADMIN_PASSWORD / USER_PASSWORD
+    admin-password: ${ADMIN_PASSWORD:admin123}
+    user-password: ${USER_PASSWORD:user123}
